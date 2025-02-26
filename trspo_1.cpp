@@ -23,9 +23,6 @@ int main() {
 		return 1;
 	}
 
-	std::cout << "Original CreateFileA address: 0x" << std::hex << originalCreateFileA << std::endl;
-	std::cout << "HookCreateFileA address: 0x" << std::hex << &HookCreateFileA << std::endl;
-
 	//HookPatch hookPatch = HookPatch::HookPatch(originalCreateFileA, &HookCreateFileA);
 	//hookPatch.patch();
 
