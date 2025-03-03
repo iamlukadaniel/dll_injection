@@ -362,3 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /trspo_1.sln
+/trspo_1.exe
+/testfile.txt
+/trspo_1.h
+/CMakeSettings.json
+/trspo_1.cpp
