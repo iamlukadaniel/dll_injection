@@ -17,6 +17,7 @@
 mono_crash.*
 
 # Build results
+[Bb]uild/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -367,3 +368,5 @@ FodyWeavers.xsd
 /trspo_1.h
 /CMakeSettings.json
 /trspo_1.cpp
+capstone/
+*.json

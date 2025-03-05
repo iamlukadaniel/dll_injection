@@ -9,16 +9,25 @@
 
 class HookManager {
 public:
-	bool addHook(void* target, void* hook);
+	static HookManager& getInstance();
 
 	bool addHook(const std::string& libraryName, const std::string& functionName, void* hook);
 
-	bool removeHook(void* target);
-
 	bool removeHook(const std::string& libraryName, const std::string& functionName);
 
+	void removeAllHooks();
+
+	std::string getLastHookedFuncName();
+
+	void* getTrampolineAddress(const std::string& libraryName, const std::string& functionName);
+
 private:
-	std::unordered_map<void*, std::unique_ptr<HookPatch>> hooks;
+	HookManager() = default;
+	HookManager(const HookManager&) = delete;
+	HookManager& operator=(const HookManager&) = delete;
+
+	std::unordered_map<std::string, std::unique_ptr<HookPatch>> hooks;
+	std::string lastHookedFuncName;
 };
 
 #endif // HOOKMANAGER_H

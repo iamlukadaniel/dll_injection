@@ -6,23 +6,31 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <capstone/capstone.h>
+#include "UnifiedHookHandler.h"
 
 class HookPatch {
 public:
-    // Конструктор принимает адрес целевой функции, адрес функции-хука и размер патча (по умолчанию 12 байт)
-    HookPatch(void* target, void* hook, size_t size = 12);
+    HookPatch(void* target, void* hook);
 
-    // Применяет патч: сохраняет оригинальные байты и записывает инструкцию перехода
     bool patch();
 
-    // Восстанавливает оригинальные байты (отменяет патч)
     bool unpatch();
 
+    void* getTrampolineAddress();
+
 private:
-    void* targetAddress;                // Адрес функции, которую патчат
-    void* hookAddress;                  // Адрес функции-хука
-    size_t patchSize;                   // Размер патча (в байтах)
-    std::vector<uint8_t> originalBytes; // Сохранённые оригинальные байты
+    void* getRealFunctionAddress(void* jmpStubAddr);
+
+	size_t calculatePatchSize(size_t minSize);
+
+    size_t writeAbsoluteJump64(void* absJumpMemory, void* addrToJumpTo);
+     
+    void* targetAddress;
+    void* hookAddress;
+    void* trampolineAddress;
+    size_t patchSize;
+    std::vector<uint8_t> originalBytes;
 };
 
 #endif // HOOKPATCH_H

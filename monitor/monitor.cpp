@@ -114,17 +114,10 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Target PID: " << targetPid << std::endl;
 
-	// build DLL absolute path
-	char modulePath[MAX_PATH];
-	GetModuleFileNameA(NULL, modulePath, MAX_PATH);
-	std::string dllPath(modulePath);
-	size_t pos = dllPath.find_last_of("\\/");
-	if (pos != std::string::npos) {
-		dllPath = dllPath.substr(0, pos + 1) + "hookdll.dll";
-	}
-	else {
-		dllPath = "hookdll.dll";
-	}
+	// building DLL absolute path
+	char dllPathBuffer[MAX_PATH];
+	GetFullPathName("hookdll.dll", MAX_PATH, dllPathBuffer, NULL);
+	std::string dllPath(dllPathBuffer);
 
 	// creating named pipe
 	HANDLE hPipe = CreateNamedPipeA(
@@ -150,7 +143,7 @@ int main(int argc, char* argv[]) {
 	}
 	std::cout << "DLL injected successfully." << std::endl;
 
-	// wait for DLL connection to the pipe
+	// waiting for DLL to connect to the pipe
 	std::cout << "Waiting for DLL to connect to the pipe..." << std::endl;
 	BOOL connected = ConnectNamedPipe(hPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
 	if (!connected) {
@@ -160,7 +153,7 @@ int main(int argc, char* argv[]) {
 	}
 	std::cout << "DLL connected to the pipe." << std::endl;
 
-	// send configuration to DLL: "MODE:<mode>;PARAM:<param>\n"
+	// sending configuration to DLL: "MODE:<mode>;PARAM:<param>\n"
 	std::string configMsg = "MODE:" + mode + ";PARAM:" + param + "\n";
 	DWORD bytesWritten;
 	if (!WriteFile(hPipe, configMsg.c_str(), (DWORD)configMsg.size(), &bytesWritten, NULL)) {
@@ -170,13 +163,13 @@ int main(int argc, char* argv[]) {
 	}
 	std::cout << "Configuration sent to DLL: " << configMsg;
 
-	// read messages from DLL
+	// reading messages from DLL
 	char buffer[512] = { 0 };
 	DWORD bytesRead;
 	std::cout << "Listening for messages from DLL..." << std::endl;
 	while (ReadFile(hPipe, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead != 0) {
 		buffer[bytesRead] = '\0';
-		std::cout << "DLL: " << buffer << std::endl;
+		std::cout << "[DLL] " << buffer << std::endl;
 	}
 
 	CloseHandle(hPipe);
