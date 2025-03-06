@@ -7,7 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <capstone/capstone.h>
-#include "UnifiedHookHandler.h"
+#include "../UnifiedHookHandler/UnifiedHookHandler.h"
 
 class HookPatch {
 public:

@@ -10,7 +10,7 @@ int main() {
 
 	system("pause");
 
-	CreateFileA("testfile.txt", GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	CreateFileA("testfile12345.txt", GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 	return 0;
 }

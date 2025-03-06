@@ -16,13 +16,28 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 file(GLOB HOOKDLL_SOURCES
     "hookdll/*.cpp"
-    "hookdll/*.h"
-    "hookdll/*.asm"
+    "hookdll/FileHider/*.cpp"
+    "hookdll/FileHider/*.h"
+    "hookdll/HookHandlers/*.cpp"
+    "hookdll/HookHandlers/*.h"
+    "hookdll/HookPatch/*.cpp"
+    "hookdll/HookPatch/*.h"
+    "hookdll/HookManager/*.cpp"
+    "hookdll/HookManager/*.h"
+    "hookdll/UnifiedHookHandler/*.asm"
+    "hookdll/UnifiedHookHandler/*.h"
+    "common/*.cpp"
+    "common/*.h"
 )
 
 file(GLOB MONITOR_SOURCES
     "monitor/*.cpp"
-    "monitor/*.h"
+    "monitor/Monitor/*.cpp"
+    "monitor/Monitor/*.h"
+    "monitor/ProcessManager/*.cpp"
+    "monitor/ProcessManager/*.h"
+    "common/*.cpp"
+    "common/*.h"
 )
 
 add_library(hookdll SHARED ${HOOKDLL_SOURCES}  )

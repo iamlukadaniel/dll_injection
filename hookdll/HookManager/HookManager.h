@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include "HookPatch.h"
+#include "../HookPatch/HookPatch.h"
 
 class HookManager {
 public:
