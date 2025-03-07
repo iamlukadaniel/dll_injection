@@ -6,6 +6,7 @@
 #include "../FileHider/FileHider.h"
 #include "../HookManager/HookManager.h"
 #include "../../common/Pipe.h"
+#include "../../common/StringConverter.h"
 #include <iostream>
 #include <ctime>
 #include <cstdio>

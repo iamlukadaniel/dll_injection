@@ -7,7 +7,7 @@ HookPatch::HookPatch(void* target, void* hook)
 	patchSize(0) {}
 
 bool HookPatch::patch() {
-	const size_t jumpSize = 12; // 12 bytes for: MOV RAX, imm64; JMP RAX
+	const size_t jumpSize = 13; // 12 bytes for: MOV RAX, imm64; JMP RAX
 	patchSize = calculatePatchSize(jumpSize);
 	if (patchSize < jumpSize) {
 		std::cerr << "Not enough bytes to install hook." << std::endl;
@@ -117,9 +117,8 @@ size_t HookPatch::calculatePatchSize(size_t minSize) {
 
 size_t HookPatch::writeAbsoluteJump64(void* absJumpMemory, void* addrToJumpTo)
 {
-		uint8_t absJumpInstructions[] = { 0x48, 0xB8,
-									  0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, //mov 64 bit value into rax
-									  0xFF, 0xE0 }; //jmp rax
+	uint8_t absJumpInstructions[] = { 0x49, 0xBA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, //mov 64 bit value into r10
+										0x41, 0xFF, 0xE2 };
 
 	uint64_t addrToJumpTo64 = (uint64_t)addrToJumpTo;
 	memcpy(&absJumpInstructions[2], &addrToJumpTo64, sizeof(addrToJumpTo64));

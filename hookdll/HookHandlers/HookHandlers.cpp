@@ -10,6 +10,7 @@ BOOL(*OriginalFindNextFileW)(HANDLE, LPWIN32_FIND_DATAW);
 Pipe& pipe = Pipe::getInstance();
 
 void HookHandlers::HookLogging() {
+
 	using namespace std::chrono;
 	auto now = system_clock::now();
 	auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -17,16 +18,14 @@ void HookHandlers::HookLogging() {
 	std::tm local_tm;
 	localtime_s(&local_tm, &t);
 
-	std::ostringstream oss;
-	oss << "[" << std::put_time(&local_tm, "%H:%M:%S")
-		<< '.' << std::setfill('0') << std::setw(3)
-		<< ms.count() << "] "
-		<< HookManager::getInstance().getLastHookedFuncName() << " executed";
+	std::wstringstream wss;
+	wss << L"[" << std::put_time(&local_tm, L"%H:%M:%S")
+		<< L'.' << std::setfill(L'0') << std::setw(3)
+		<< ms.count() << L"] "
+		<< s2ws(HookManager::getInstance().getLastHookedFuncName()) << L" executed";
 
-	std::string message = oss.str();
+	std::wstring message = wss.str();
 	pipe.sendMessage(message);
-
-	return;
 }
 
 HANDLE __stdcall HookHandlers::HookCreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
@@ -46,11 +45,8 @@ HANDLE __stdcall HookHandlers::HookCreateFileA(LPCSTR lpFileName, DWORD dwDesire
 
 HANDLE __stdcall HookHandlers::HookCreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
 	LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
-{
-	std::wstring wstr(lpFileName);
-	std::string strFileName(wstr.begin(), wstr.end());
-
-	if (FileHider::getInstance().shouldHideFile(strFileName)) {
+{	
+	if (FileHider::getInstance().shouldHideFile(lpFileName)) {
 		SetLastError(ERROR_FILE_NOT_FOUND);
 		return INVALID_HANDLE_VALUE;
 	}
@@ -78,21 +74,16 @@ HANDLE __stdcall HookHandlers::HookFindFirstFileA(LPCSTR lpFileName, LPWIN32_FIN
 HANDLE __stdcall HookHandlers::HookFindFirstFileW(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData)
 {
 	HANDLE hFind = nullptr;
-	std::wstring wstr(lpFileName);
-	std::string strFileName(wstr.begin(), wstr.end());
-
 	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindFirstFileW");
 	memcpy((void*)(&OriginalFindFirstFileW), &trampolineAddress, sizeof(uint64_t));
 
-	do {
-		hFind = OriginalFindFirstFileW(lpFileName, lpFindFileData);
-		if (hFind == INVALID_HANDLE_VALUE) return hFind;
-	} while (FileHider::getInstance().shouldHideFile(strFileName));
+	hFind = OriginalFindFirstFileW(lpFileName, lpFindFileData);
+
+	if (FileHider::getInstance().shouldHideFile(lpFindFileData->cFileName))
+		return INVALID_HANDLE_VALUE;
 
 	return hFind;
 }
-
-// ====================== FindNextFileA / FindNextFileW ======================
 
 BOOL __stdcall HookHandlers::HookFindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData)
 {
@@ -111,16 +102,13 @@ BOOL __stdcall HookHandlers::HookFindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DA
 BOOL __stdcall HookHandlers::HookFindNextFileW(HANDLE hFindFile, LPWIN32_FIND_DATAW lpFindFileData)
 {
 	BOOL result = FALSE;
-	std::wstring wstr(lpFindFileData->cFileName);
-	std::string strFileName(wstr.begin(), wstr.end());
-
 	void* trampolineAddress = HookManager::getInstance().getTrampolineAddress("kernel32.dll", "FindNextFileW");
 	memcpy((void*)(&OriginalFindNextFileW), &trampolineAddress, sizeof(uint64_t));
 
 	do {
 		result = OriginalFindNextFileW(hFindFile, lpFindFileData);
 		if (!result) return FALSE;
-	} while (FileHider::getInstance().shouldHideFile(strFileName));
+	} while (FileHider::getInstance().shouldHideFile(lpFindFileData->cFileName));
 
 	return result;
 }

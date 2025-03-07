@@ -46,6 +46,8 @@ target_link_libraries(hookdll PRIVATE capstone)
 
 add_executable(monitor ${MONITOR_SOURCES})
 
-add_executable(test test.cpp)
+add_executable(test test.cpp )
+
+target_link_libraries(test PRIVATE capstone)
 
 set_source_files_properties(hookdll/UnifiedHookHandler.asm PROPERTIES LANGUAGE ASM_MASM)

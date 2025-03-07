@@ -58,8 +58,7 @@ UnifiedHookHandler PROC
     pop rcx
     pop rax
 
-    mov rax, qword ptr [g_TrampolineAddress]
-    jmp rax
+    jmp qword ptr [g_TrampolineAddress]
 UnifiedHookHandler ENDP
 
 END

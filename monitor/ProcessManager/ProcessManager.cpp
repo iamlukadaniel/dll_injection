@@ -2,26 +2,26 @@
 #include <tlhelp32.h>
 #include <iostream>
 
-DWORD ProcessManager::findProcessId(const std::string& processName) {
+DWORD ProcessManager::findProcessId(const std::wstring& processName) {
 	DWORD processId = 0;
 	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hSnapshot != INVALID_HANDLE_VALUE) {
-		PROCESSENTRY32 pe;
-		pe.dwSize = sizeof(PROCESSENTRY32);
-		if (Process32First(hSnapshot, &pe)) {
+		PROCESSENTRY32W pe;
+		pe.dwSize = sizeof(PROCESSENTRY32W);
+		if (Process32FirstW(hSnapshot, &pe)) {
 			do {
-				if (_stricmp(pe.szExeFile, processName.c_str()) == 0) {
+				if (_wcsicmp(pe.szExeFile, processName.c_str()) == 0) {
 					processId = pe.th32ProcessID;
 					break;
 				}
-			} while (Process32Next(hSnapshot, &pe));
+			} while (Process32NextW(hSnapshot, &pe));
 		}
 		CloseHandle(hSnapshot);
 	}
 	return processId;
 }
 
-bool ProcessManager::injectDLL(DWORD pid, const std::string& dllPath) {
+bool ProcessManager::injectDLL(DWORD pid, const std::wstring& dllPath) {
 	HANDLE hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
 		PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, pid);
 
@@ -30,7 +30,7 @@ bool ProcessManager::injectDLL(DWORD pid, const std::string& dllPath) {
 		return false;
 	}
 
-	size_t size = dllPath.size() + 1;
+	size_t size = (dllPath.size() + 1) * sizeof(wchar_t);
 	LPVOID pRemoteMemory = VirtualAllocEx(hProcess, NULL, size, MEM_COMMIT, PAGE_READWRITE);
 	if (!pRemoteMemory) {
 		std::cerr << "Failed to allocate memory in target process." << std::endl;
@@ -45,7 +45,7 @@ bool ProcessManager::injectDLL(DWORD pid, const std::string& dllPath) {
 		return false;
 	}
 
-	auto pLoadLibrary = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+	auto pLoadLibrary = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
 	if (!pLoadLibrary) {
 		std::cerr << "Failed to get address of LoadLibraryA." << std::endl;
 		VirtualFreeEx(hProcess, pRemoteMemory, 0, MEM_RELEASE);

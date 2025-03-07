@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string>
 #include <functional>
+#include "StringConverter.h"
 
 class Pipe {
 public:
@@ -12,8 +13,8 @@ public:
 
 	bool createServerPipe();
 	bool connectToServer();
-	bool sendMessage(const std::string& message);
-	bool receiveMessage(std::function<void(const std::string&)> callback);
+	bool sendMessage(const std::wstring& message);
+	bool receiveMessage(std::function<void(const std::wstring&)> callback);
 	void closePipe();
 
 
@@ -23,7 +24,7 @@ private:
 	Pipe& operator=(const Pipe&) = delete;
 
 	HANDLE hPipe = INVALID_HANDLE_VALUE;
-	const std::string pipeName = "\\\\.\\pipe\\HookPipe";
+	const std::wstring pipeName = L"\\\\.\\pipe\\HookPipe";
 };
 
 #endif // PIPE_H

@@ -4,6 +4,7 @@
 #include <string>
 #include "../ProcessManager/ProcessManager.h"
 #include "../../common/Pipe.h"
+#include "../../common/StringConverter.h"
 
 class Monitor {
 public:
@@ -12,8 +13,8 @@ public:
 
 private:
 	DWORD targetPid;
-	std::string mode;
-	std::string param;
+	std::wstring mode;
+	std::wstring param;
 
 	void parseArguments(int argc, char* argv[]);
 };

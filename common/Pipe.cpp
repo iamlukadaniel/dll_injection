@@ -12,7 +12,7 @@ HANDLE Pipe::getHandle()
 }
 
 bool Pipe::createServerPipe() {
-	hPipe = CreateNamedPipeA(
+	hPipe = CreateNamedPipeW(
 		pipeName.c_str(),
 		PIPE_ACCESS_DUPLEX,
 		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -32,28 +32,28 @@ bool Pipe::createServerPipe() {
 
 bool Pipe::connectToServer() {
 	while (true) {
-		hPipe = CreateFileA(pipeName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+		hPipe = CreateFileW(pipeName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 		if (hPipe != INVALID_HANDLE_VALUE)
 			return true;
 		Sleep(100);
 	}
 }
 
-bool Pipe::sendMessage(const std::string& message) {
+bool Pipe::sendMessage(const std::wstring& message) {
 	if (hPipe == INVALID_HANDLE_VALUE) return false;
 
 	DWORD bytesWritten;
-	return WriteFile(hPipe, message.c_str(), static_cast<DWORD>(message.size()), &bytesWritten, NULL);
+	return WriteFile(hPipe, ws2s(message).c_str(), static_cast<DWORD>(ws2s(message).size()), &bytesWritten, NULL);
 }
 
-bool Pipe::receiveMessage(std::function<void(const std::string&)> callback) {
+bool Pipe::receiveMessage(std::function<void(const std::wstring&)> callback) {
 	if (hPipe == INVALID_HANDLE_VALUE) return false;
 
 	char buffer[512] = { 0 };
 	DWORD bytesRead;
 	if (ReadFile(hPipe, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0) {
 		buffer[bytesRead] = '\0';
-		callback(std::string(buffer));
+		callback(s2ws(std::string(buffer)));
 		return true;
 	}
 	return false;

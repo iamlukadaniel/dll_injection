@@ -6,23 +6,23 @@ Monitor::Monitor(int argc, char* argv[]) : targetPid(0) {
 }
 
 void Monitor::parseArguments(int argc, char* argv[]) {
-	std::string processName;
+	std::wstring processName;
 
 	for (int i = 1; i < argc; i++) {
-		std::string arg = argv[i];
-		if (arg == "-pid" && i + 1 < argc) {
+		std::wstring arg = s2ws(argv[i]);
+		if (arg == L"-pid" && i + 1 < argc) {
 			targetPid = atoi(argv[++i]);
 		}
-		else if (arg == "-name" && i + 1 < argc) {
-			processName = argv[++i];
+		else if (arg == L"-name" && i + 1 < argc) {
+			processName = s2ws(argv[++i]);
 		}
-		else if (arg == "-func" && i + 1 < argc) {
-			mode = "func";
-			param = argv[++i];
+		else if (arg == L"-func" && i + 1 < argc) {
+			mode = L"func";
+			param = s2ws(argv[++i]);
 		}
-		else if (arg == "-hide" && i + 1 < argc) {
-			mode = "hide";
-			param = argv[++i];
+		else if (arg == L"-hide" && i + 1 < argc) {
+			mode = L"hide";
+			param = s2ws(argv[++i]);
 		}
 	}
 
@@ -34,9 +34,9 @@ void Monitor::parseArguments(int argc, char* argv[]) {
 void Monitor::run() {
 	Pipe& pipe = Pipe::getInstance();
 
-	char dllPathBuffer[MAX_PATH];
-	GetFullPathName("hookdll.dll", MAX_PATH, dllPathBuffer, NULL);
-	std::string dllPath(dllPathBuffer);
+	wchar_t dllPathBuffer[MAX_PATH];
+	GetFullPathNameW(L"hookdll.dll", MAX_PATH, dllPathBuffer, NULL);
+	std::wstring dllPath(dllPathBuffer);
 
 	if (!pipe.createServerPipe() || !ProcessManager::injectDLL(targetPid, dllPath)) {
 		return;
@@ -53,13 +53,13 @@ void Monitor::run() {
 	std::cout << "DLL connected to the pipe." << std::endl;
 
 
-	std::cout << "Sending command to DLL: " << "MODE:" + mode + ";PARAM:" + param << std::endl;
-	std::string message = "MODE:" + mode + ";PARAM:" + param;
+	std::wcout << L"Sending command to DLL: " << L"MODE:" + mode + L";PARAM:" + param << std::endl;
+	std::wstring message = L"MODE:" + mode + L";PARAM:" + param;
 	pipe.sendMessage(message);
 
 	std::cout << "Listening for messages from DLL..." << std::endl;
-	while(pipe.receiveMessage([](const std::string& msg) {
-		std::cout << "[DLL] " << msg << std::endl;
+	while(pipe.receiveMessage([](const std::wstring& msg) {
+		std::wcout << L"[DLL] " << msg << std::endl;
 	}));
 
 	pipe.closePipe();

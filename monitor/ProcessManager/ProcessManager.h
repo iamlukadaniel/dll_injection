@@ -6,8 +6,8 @@
 
 class ProcessManager {
 public:
-	static DWORD findProcessId(const std::string& processName);
-	static bool injectDLL(DWORD pid, const std::string& dllPath);
+	static DWORD findProcessId(const std::wstring& processName);
+	static bool injectDLL(DWORD pid, const std::wstring& dllPath);
 };
 
 #endif // PROCESSMANAGER_H
